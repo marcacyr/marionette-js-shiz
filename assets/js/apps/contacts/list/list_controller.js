@@ -1,6 +1,6 @@
 ContactManager.module("ContactsApp.List", function(List, ContactManager, Backbone, Marionette, $, _){
   List.Controller = {
-    listContacts: function(){
+    listContacts: function(criterion){
       var loadingView = new ContactManager.Common.Views.Loading();
       ContactManager.mainRegion.show(loadingView);
 
@@ -15,12 +15,21 @@ ContactManager.module("ContactsApp.List", function(List, ContactManager, Backbon
           filterFunction: function(filterCriterion){
             var criterion = filterCriterion.toLowerCase();
             return function(contact){
-              if(contact.get("firstName").toLowerCase().indexOf(criterion) !== -1 || contact.get("lastName").toLowerCase().indexOf(criterion) !== -1 || contact.get("phoneNumber").toLowerCase().indexOf(criterion) !== -1){
-                return contact;
+              if(contact.get("firstName").toLowerCase().indexOf(criterion) !== -1
+                || contact.get("lastName").toLowerCase().indexOf(criterion) !== -1
+                || contact.get("phoneNumber").toLowerCase().indexOf(criterion) !== -1){
+                  return contact;
               }
             };
           }
         });
+
+        if(criterion){
+          filteredContacts.filter(criterion);
+          contactsListPanel.once("show", function(){
+            contactsListPanel.triggerMethod("set:filter:criterion", criterion);
+          });
+        }
 
         var contactsListView = new List.Contacts({
           collection: filteredContacts
@@ -28,6 +37,7 @@ ContactManager.module("ContactsApp.List", function(List, ContactManager, Backbon
 
         contactsListPanel.on("contacts:filter", function(filterCriterion){
           filteredContacts.filter(filterCriterion);
+          ContactManager.trigger("contacts:filter", filterCriterion);
         });
 
         contactsListLayout.on("show", function(){
@@ -54,6 +64,8 @@ ContactManager.module("ContactsApp.List", function(List, ContactManager, Backbon
               contacts.add(newContact);
               view.trigger("dialog:close");
               var newContactView = contactsListView.children.findByModel(newContact);
+              // check whether the new contact view is displayed (it could be
+              // invisible due to the current filter criterion)
               if(newContactView){
                 newContactView.flash("success");
               }
