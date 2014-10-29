@@ -2,20 +2,26 @@ ContactManager.module("Entities", function(Entities, ContactManager, Backbone, M
   Entities.Contact = Backbone.Model.extend({
     urlRoot: "contacts",
 
-    validate: function(attrs, options){
+    defaults: {
+      firstName: "",
+      lastName: "",
+      phoneNumber: ""
+    },
+
+    validate: function(attrs, options) {
       var errors = {};
-      if(!attrs.firstName){
+      if (! attrs.firstName) {
         errors.firstName = "can't be blank";
       }
-      if(!attrs.lastName){
+      if (! attrs.lastName) {
         errors.lastName = "can't be blank";
       }
       else{
-        if(attrs.lastName.length < 2){
+        if (attrs.lastName.length < 2) {
           errors.lastName = "is too short";
         }
       }
-      if(!_.isEmpty(errors)){
+      if( ! _.isEmpty(errors)){
         return errors;
       }
     }
@@ -55,6 +61,7 @@ ContactManager.module("Entities", function(Entities, ContactManager, Backbone, M
       var promise = defer.promise();
       $.when(promise).done(function(contacts){
         if(contacts.length === 0){
+          // if we don't have any contacts yet, create some for convenience
           var models = initializeContacts();
           contacts.reset(models);
         }
